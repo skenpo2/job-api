@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const userRoutes = require('./routes/user.routes');
+const jobRoutes = require('./routes/job.routes');
 dotenv.config();
 const cookieParser = require('cookie-parser');
 PORT = process.env.PORT || 5000;
@@ -22,6 +24,8 @@ mongoose
     console.log('Cannot Establish Database connection');
   });
 
+app.use(userRoutes);
+app.use(jobRoutes);
 app.listen(PORT, () => {
   console.log(` App is listening at Port ${PORT}`);
 });

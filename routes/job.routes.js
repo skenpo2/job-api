@@ -7,4 +7,4 @@ routes.post('/job/:id');
 routes.put('/job/:id');
 routes.delete('/job/:id');
 
-module.exports = jobRoutes;
+module.exports = routes;
