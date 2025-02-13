@@ -6,6 +6,7 @@ const userRoutes = require('./routes/user.routes');
 const jobRoutes = require('./routes/job.routes');
 dotenv.config();
 const cookieParser = require('cookie-parser');
+const errorHandler = require('./middlewares/errorHandler');
 PORT = process.env.PORT || 5000;
 const dbURL = process.env.MONGO_URL;
 
@@ -26,6 +27,9 @@ mongoose
 
 app.use(userRoutes);
 app.use(jobRoutes);
+
+// error handler
+app.use(errorHandler);
 app.listen(PORT, () => {
   console.log(` App is listening at Port ${PORT}`);
 });
