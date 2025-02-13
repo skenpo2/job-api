@@ -1,10 +1,11 @@
+require('dotenv').config();
+require('express-async-errors');
 const express = require('express');
 const mongoose = require('mongoose');
-const dotenv = require('dotenv');
 const cors = require('cors');
+const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const jobRoutes = require('./routes/job.routes');
-dotenv.config();
 const cookieParser = require('cookie-parser');
 const errorHandler = require('./middlewares/errorHandler');
 PORT = process.env.PORT || 5000;
@@ -24,7 +25,7 @@ mongoose
   .catch(() => {
     console.log('Cannot Establish Database connection');
   });
-
+app.use(authRoutes);
 app.use(userRoutes);
 app.use(jobRoutes);
 
