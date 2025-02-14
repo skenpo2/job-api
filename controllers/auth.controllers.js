@@ -34,22 +34,62 @@ const login = async (req, res) => {
       id: foundUser._id,
     },
     process.env.REFRESH_TOKEN,
-    { expiresIn: '1h' }
+    { expiresIn: '7d' }
   );
-  res.status(200).json(accessToken);
-  res.cookie('jwt', refreshToken, { httpOnly: true, sameSite: 'None' });
+  res
+    .status(200)
+    .cookie('jwt', refreshToken, {
+      httpOnly: true,
+      sameSite: 'None',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    })
+    .json({ accessToken: accessToken });
 };
 
 // get refresh token
 
-const refresh = async (req, res) => {
-  res.json({ message: 'okay' });
+const refresh = (req, res) => {
+  const cookies = req.cookies;
+
+  if (!cookies?.jwt) {
+    res.status(403).json({ message: 'Unauthorized' });
+  }
+
+  const refreshToken = cookies.jwt;
+  jwt.verify(refreshToken, process.env.REFRESH_TOKEN, async (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ message: ' Forbidden' });
+    }
+    const foundUser = await User.findById({ _id: decoded.id });
+
+    if (!foundUser) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    const accessToken = jwt.sign(
+      {
+        userDetails: {
+          id: foundUser._id,
+          isAdmin: foundUser.isAdmin,
+        },
+      },
+      process.env.ACCESS_TOKEN,
+      { expiresIn: '30s' }
+    );
+    res.json({ accessToken });
+  });
 };
 
 // logout
 
 const logout = async (req, res) => {
-  res.json({ message: 'okay' });
+  const cookies = req.cookies;
+
+  if (!cookies?.jwt) {
+    res.sendStatus(204);
+  }
+
+  res.clearCookie('jwt', { httpOnly: true, sameSite: 'None' });
+  res.json({ message: ' Cookies cleared' });
 };
 
 module.exports = { login, refresh, logout };
