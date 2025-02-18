@@ -19,7 +19,6 @@ const jobSchema = new mongoose.Schema(
 
     salary: {
       type: String,
-      required: true,
     },
 
     company: {

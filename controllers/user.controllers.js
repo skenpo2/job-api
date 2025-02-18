@@ -32,70 +32,64 @@ const createUser = async (req, res) => {
   if (!email || !password || !name) {
     return res.status(401).json({ message: 'Please provide your details' });
   }
-
-  try {
-    // checking if the email provided exist already in the database
-    const isRegisteredUser = await User.findOne({ username })
-      .collation({ locale: 'en', strength: 2 })
-      .lean()
-      .exec();
-
-    if (isRegisteredUser) {
-      return res.status(409).json({ message: 'Email Already in Use' });
-    }
-
-    // hashing user password
-    const salt = bcrypt.genSaltSync(10);
-    const hashedPassword = bcrypt.hashSync(password, salt);
-
-    // creating a new user
-    const newUser = new userModel({
-      name,
-      email,
-      password: hashedPassword,
-    });
-
-    // saving the user data to database
-    await newUser.save();
-    res.status(201).json({ message: 'User Registered Successfully' });
-  } catch (error) {
-    res.status(500).json({ message: 'Something went wrong' });
-  }
-};
-
-const updateUser = async (req, res) => {
-  const { email, password, name, isAdmin } = req.body;
-
-  if (!email || !name) {
-    return res.status(401).json({ message: ' please provide all fields' });
-  }
-
-  const isUser = await userModel.findOne({ email });
-
-  if (!isUser) {
-    return res.status(404).json({ message: 'User not found' });
-  }
-  const duplicate = await userModel
+  // checking if the email provided exist already in the database
+  const isRegisteredUser = await userModel
     .findOne({ email })
     .collation({ locale: 'en', strength: 2 })
     .lean()
     .exec();
 
-  if (duplicate) {
-    return res.status(409).json({ message: 'Duplicate Email' });
+  if (isRegisteredUser) {
+    return res.status(409).json({ message: 'Email Already in Use' });
   }
-  isUser.name = name;
-  isUser.email = email;
+
+  // hashing user password
+  const salt = bcrypt.genSaltSync(10);
+  const hashedPassword = bcrypt.hashSync(password, salt);
+
+  // creating a new user
+  const newUser = new userModel({
+    name,
+    email,
+    password: hashedPassword,
+  });
+
+  // saving the user data to database
+  await newUser.save();
+  res.status(201).json({ message: 'User Registered Successfully' });
+};
+
+const updateUser = async (req, res) => {
+  const id = req.id;
+
+  const { password, email, name, isAdmin } = req.body;
+
+  const isUser = await userModel.findById({ _id: id }).lean();
+
+  if (!isUser) {
+    return res.status(404).json({ message: ' User does not exist' });
+  }
+  const updatedUser = { password, email, name, isAdmin };
   if (password) {
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync(password, salt);
-    isUser.password = hashedPassword;
+    updatedUser.password = hashedPassword;
   }
 
-  const updatedUser = await isUser.save();
-  res
-    .status(201)
-    .json({ message: `${updateUser.name} details saved successfully` });
+  const duplicate = await userModel
+    .findOne({ email: updatedUser.email })
+    .lean();
+
+  if (duplicate) {
+    return res.status(409).json({ message: 'Email already in Use' });
+  }
+
+  const newData = await userModel
+    .findOneAndUpdate({ _id: id }, updatedUser, {
+      new: true,
+    })
+    .select('-password');
+  res.status(201).json(newData);
 };
 
 const deleteUser = async (req, res) => {

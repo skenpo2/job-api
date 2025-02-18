@@ -1,22 +1,27 @@
 const jwt = require('jsonwebtoken');
 
 const verifyJWT = (req, res, next) => {
-  const authHeader = req.header.authorization || req.header.Authorization;
+  const authHeader =
+    req.headers['authorization'] || req.headers['Authorization'];
 
-  if (!authHeader?.startsWith('Bearer ')) {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
 
+  // Extract the token
   const token = authHeader.split(' ')[1];
 
+  // Verify the JWT
   jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
     if (err) {
-      return res.status(403).json({ message: 'Forbidden' });
+      return res.status(403).json({ message: 'Forbidden' }); // Invalid token
     }
 
-    // authorize the user here
-    req.id = decoded.id;
-    next();
+    // Attach the decoded user ID to the request for authorization
+    req.id = decoded.userDetails.id;
+    req.isAdmin = decoded.userDetails.isAdmin;
+
+    next(); // Proceed to the next middleware or route handler
   });
 };
 

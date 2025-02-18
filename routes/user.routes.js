@@ -1,5 +1,6 @@
 const express = require('express');
 const routes = express.Router();
+const verifyJWT = require('../middlewares/verifyJWT');
 
 const {
   getAllUsers,
@@ -12,7 +13,7 @@ const {
 routes.post('/register', createUser);
 routes.get('/api/users', getAllUsers);
 routes.get('/api/user/:id', getSingleUser);
-routes.patch('/api/user/', updateUser);
+routes.patch('/api/user/', verifyJWT, updateUser);
 routes.delete('/api/user/', deleteUser);
 
 module.exports = routes;
