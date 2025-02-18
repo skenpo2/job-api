@@ -130,6 +130,34 @@ const updateJob = async (req, res) => {
   );
   return res.status(201).json(updatedJob);
 };
+
+const applyJob = async (req, res) => {
+  const id = req.id; // Extract user ID from JWT
+  const jobID = req.params.id; // Extract job ID from request params
+
+  // Update job and user in parallel
+  const [updatedJob, updatedUser] = await Promise.all([
+    jobModel.findByIdAndUpdate(
+      jobID,
+      { $addToSet: { applicants: id } }, // Prevents duplicate applications
+      { new: true }
+    ),
+    userModel.findByIdAndUpdate(
+      id,
+      { $addToSet: { jobApplied: jobID } },
+      { new: true } // Return only necessary fields
+    ),
+  ]);
+
+  // Handle errors
+  if (!updatedJob) return res.status(404).json({ message: 'Job not found' });
+  if (!updatedUser)
+    return res.status(403).json({ message: 'User not found, cannot apply' });
+
+  // Send response
+  res.status(201).json({ job: updatedJob, user: updatedUser });
+};
+
 module.exports = {
   createJob,
   getVerifiedJobs,
@@ -137,4 +165,5 @@ module.exports = {
   getSingleVerifiedJob,
   getSingleJob,
   updateJob,
+  applyJob,
 };
