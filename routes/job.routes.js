@@ -8,6 +8,7 @@ const {
   getAllJobs,
   getSingleVerifiedJob,
   getSingleJob,
+  updateJob,
 } = require('../controllers/job.controllers');
 
 routes.get('/jobs/verified', getVerifiedJobs);
@@ -16,7 +17,7 @@ routes.get('/jobs', verifyJWT, verifyAdmin, getAllJobs);
 routes.get('/job/:id', verifyJWT, verifyAdmin, getSingleJob);
 routes.get('/job/:id');
 routes.post('/job', verifyJWT, createJob);
-routes.put('/job/:id');
+routes.put('/job/:id', verifyJWT, updateJob);
 routes.delete('/job/:id');
 
 module.exports = routes;

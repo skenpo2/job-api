@@ -63,7 +63,11 @@ const getAllJobs = async (req, res) => {
 const getSingleVerifiedJob = async (req, res) => {
   const jobID = req.params.id;
 
-  const job = await jobModel.findById({ _id: jobID });
+  const job = await jobModel.findById({ _id: jobID }).lean();
+
+  if (!job) {
+    return res.status(404).json({ message: 'job not found' });
+  }
 
   if (job.verified === false) {
     return res.status(401).json({ message: ' Not allowed' });
@@ -74,14 +78,63 @@ const getSingleVerifiedJob = async (req, res) => {
 const getSingleJob = async (req, res) => {
   const jobID = req.params.id;
 
-  const job = await jobModel.findById({ _id: jobID });
+  const job = await jobModel.findById({ _id: jobID }).lean();
+
+  if (!job) {
+    return res.status(404).json({ message: 'job not found' });
+  }
   res.status(200).json(job);
 };
 
+const updateJob = async (req, res) => {
+  const { title, description, location, salary, company, image, verified } =
+    req.body;
+  const id = req.id;
+
+  const jobID = req.params.id;
+
+  const job = await jobModel.findById({ _id: jobID }).lean();
+  const user = await userModel.findById({ _id: id }).lean();
+
+  if (!job) {
+    return res.status(404).json({ message: 'job not found' });
+  }
+
+  if (user.isAdmin) {
+    const updatedJob = await jobModel.findByIdAndUpdate(
+      jobID,
+      {
+        title,
+        description,
+        location,
+        salary,
+        company,
+        image,
+        verified,
+      },
+      { new: true }
+    );
+    return res.status(201).json(updatedJob);
+  }
+  const updatedJob = await jobModel.findByIdAndUpdate(
+    jobID,
+    {
+      title,
+      description,
+      location,
+      salary,
+      company,
+      image,
+    },
+    { new: true }
+  );
+  return res.status(201).json(updatedJob);
+};
 module.exports = {
   createJob,
   getVerifiedJobs,
   getAllJobs,
   getSingleVerifiedJob,
   getSingleJob,
+  updateJob,
 };
