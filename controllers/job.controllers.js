@@ -1,6 +1,8 @@
 const jobModel = require('../models/job.model');
 const userModel = require('../models/user.model');
 
+const dateFn = require('../config/dateUtil');
+
 // create a job post
 // access is for authenticated user only
 const createJob = async (req, res) => {
@@ -11,7 +13,7 @@ const createJob = async (req, res) => {
   if (!id) {
     return res
       .status(400)
-      .json({ message: ' userID required, kindle Authenticate' });
+      .json({ message: ' userID required, kindly Authenticate' });
   }
 
   const canSave = [title, description, location, company].every(Boolean);
@@ -41,12 +43,17 @@ const createJob = async (req, res) => {
 // access is public
 
 const getVerifiedJobs = async (req, res) => {
-  const jobs = await jobModel.find().lean();
+  const jobs = await jobModel
+    .find()
+    .lean()
+    .select('title salary createdAt skills company image _id verified');
 
   const verifiedJobs = jobs.filter((job) => job.verified === true);
+  const jobWithDate = verifiedJobs.map((job) => {
+    job.createdAt = dateFn(job.createdAt);
+  });
 
-  console.log(verifiedJobs);
-  res.status(200).json(verifiedJobs);
+  res.status(200).json({ verifiedJobs });
 };
 
 // get all jobs
