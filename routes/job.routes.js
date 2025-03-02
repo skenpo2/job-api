@@ -11,7 +11,6 @@ const {
   updateJob,
   applyJob,
 } = require('../controllers/job.controllers');
-const { verify } = require('jsonwebtoken');
 
 routes.get('/jobs/verified', getVerifiedJobs);
 routes.get('/job/verified/:id', getSingleVerifiedJob);

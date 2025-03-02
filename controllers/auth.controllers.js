@@ -7,7 +7,9 @@ const login = async (req, res) => {
   if (!email || !password) {
     return res.status(400).json({ message: 'All fields required' });
   }
-  const foundUser = await User.findOne({ email });
+  const foundUser = await User.findOne({ email }).select(
+    'email name password _id isAdmin'
+  );
 
   if (!foundUser) {
     return res.status(404).json({ message: 'User not found' });
@@ -17,7 +19,6 @@ const login = async (req, res) => {
   if (!isPassword) {
     return res.status(403).json('Unauthorized');
   }
-
   const accessToken = jwt.sign(
     {
       userDetails: {
@@ -36,6 +37,8 @@ const login = async (req, res) => {
     process.env.REFRESH_TOKEN,
     { expiresIn: '7d' }
   );
+
+  foundUser.password = '';
   res
     .status(200)
     .cookie('jwt', refreshToken, {
@@ -43,7 +46,7 @@ const login = async (req, res) => {
       sameSite: 'None',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     })
-    .json({ accessToken: accessToken });
+    .json({ user: foundUser, accessToken });
 };
 
 // get refresh token
